@@ -3,9 +3,11 @@ const express = require('express');
 const pool = require('./db');
 const app = express();
 const session = require('express-session');
+const authRoutes = require('./routes/auth');
 
 app.use(express.json());
 
+//Cookie
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
@@ -16,8 +18,12 @@ app.use(session({
     }
 }));
 
+//HTML Seiten die im public Ordner liegen
 app.use(express.static('public'));
 
+app.use('/api', authRoutes);
+
+//Servertest
 app.get('/api/health', async (req, res) => {
     try {
         await pool.query('SELECT 1');
