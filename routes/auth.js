@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
 const pool = require('../db');
+const { eingeloggt } = require('../middleware/berechtigung');
 
 const router = express.Router();
 
@@ -51,10 +52,7 @@ router.post('/logout', (req, res) => {
 });
 
 //Check
-router.get('/me', (req, res) => {
-    if (!req.session.benutzer) {
-        return res.status(401).json({ fehler: 'Nicht eingeloggt' });
-    }
+router.get('/me', eingeloggt, (req, res) => {
     res.json(req.session.benutzer);
 });
 
