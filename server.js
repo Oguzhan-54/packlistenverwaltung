@@ -4,6 +4,7 @@ const pool = require('./db');
 const app = express();
 const session = require('express-session');
 const authRoutes = require('./routes/auth');
+const packlistenRoutes = require('./routes/packlisten');
 
 app.use(express.json());
 
@@ -22,6 +23,8 @@ app.use(session({
 app.use(express.static('public'));
 
 app.use('/api', authRoutes);
+
+app.use('/api/packlisten', packlistenRoutes);
 
 //Servertest
 app.get('/api/health', async (req, res) => {
