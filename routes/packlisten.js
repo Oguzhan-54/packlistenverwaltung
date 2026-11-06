@@ -30,19 +30,41 @@ router.post('/', eingeloggt, async (req, res) => {
         return res.status(400).json(fehler);
     }
 
-    //Packliste in Datenbank speichern
+    let verbindung;
+
     try {
-        const [zeilen] = await pool.query(
+        //Packliste in Datenbank speichern
+        verbindung = await pool.getConnection(); //Verbindung holen
+        await verbindung.beginTransaction(); //Transaction starten
+        
+        const [zeilen] = await verbindung.query(
             'INSERT INTO packliste (name, jobnummer, startDatum, endDatum, erstelltVon) VALUES (?, ?, ?, ?, ?)',
             [name, jobnummer, startDatum, endDatum, req.session.benutzer.id]
         );
+
+        //Automatisch erste Box anlegen
+        await verbindung.query(
+            'INSERT INTO box (packlisteId, name) VALUES (?, ?)',
+            [zeilen.insertId, 'Box 1'] //Name Box 1 wird eingetragen
+        )
+
+        await verbindung.commit(); //Erfolg
 
         res.status(201).json({ packlisteId: zeilen.insertId });
     }
     //Falls Fehler, z.B doppelte Jobnummer oder endDatum vor startDatum
     catch (err) {
+        if (verbindung){
+            await verbindung.rollback(); //Wenn was schief läuft, dann rollback
+        }
         console.error(err);
         res.status(500).json({ fehler: 'Serverfehler' });      
+    }
+
+    finally {
+        if (verbindung){
+            verbindung.release(); //Verbindung zurückgeben
+        }
     }
 });
 
