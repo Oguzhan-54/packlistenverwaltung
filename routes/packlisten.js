@@ -121,6 +121,15 @@ router.get('/:packlisteId/material', eingeloggt, async (req, res) => {
             [packlisteId]
         );
 
+        //Pro Material die Summe holen
+        for (const zeile of material) {
+            const[summen] = await pool.query(
+                'SELECT SUM(mengeGepackt) AS summe FROM box_material WHERE materialId = ?',
+                [zeile.materialId]
+            );
+            zeile.mengeGepackt = Number(summen[0].summe);
+        }
+
         res.json(material);
     }
     catch (err) {
@@ -179,6 +188,14 @@ router.get('/:packlisteId/box', eingeloggt, async (req, res) => {
             'SELECT boxId, name FROM box WHERE packlisteId = ?',
             [packlisteId]
         );
+
+        for (const zeile of box) {
+            const[boxInhalt] = await pool.query(
+                'SELECT materialId, mengeGepackt FROM box_material WHERE boxId = ?',
+                [zeile.boxId]
+            );
+            zeile.inhalt = boxInhalt;
+        }
 
         res.json(box);
     }
@@ -394,6 +411,20 @@ router.post('/:packlisteId/archivieren', eingeloggt, async (req, res) => {
         )
 
         res.json({ status: 'Archiv' })
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
+router.get('/archiv', eingeloggt, async (req, res) => {
+    try {
+        const [zeilen] = await pool.query(
+            'SELECT packlisteId, name, jobnummer, startDatum, endDatum, status FROM packliste WHERE status = "Archiv" ORDER BY endDatum DESC'
+        );
+
+        res.json(zeilen);
     }
     catch (err) {
         console.error(err);
