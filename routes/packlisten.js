@@ -288,12 +288,66 @@ router.post('/:packlisteId/aktivieren', eingeloggt, admin, async (req, res) => {
             return res.status(409).json({ fehler: 'Status ist nicht Entwurf' });
         }
 
+        //Status auf Aktiv setzen
         const[zeilen] = await pool.query(
             'UPDATE packliste SET status = ? WHERE packlisteId = ?',
             ['Aktiv', packlisteId]
         )
 
         res.json({ status: 'Aktiv' });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
+//Packliste zurückgeben
+router.put('/:packlisteId/material/:materialId/rueckgabe', eingeloggt, async (req, res) => {
+    const materialId = req.params.materialId;
+    const packlisteId = req.params.packlisteId;
+    const { mengeIst, notiz } = req.body;
+    const fehler = { fehler: 'Eingaben unvollständig' };
+
+    if (mengeIst < 0 || mengeIst === undefined) {
+        return res.status(400).json(fehler);
+    }
+
+    try {
+        //Status der Packliste prüfen
+        const [packlisten] = await pool.query(
+            'SELECT status FROM packliste WHERE packlisteId = ?',
+            [packlisteId]
+        );
+
+        //Prüfen ob Packliste vorhanden ist
+        if (!packlisten[0]) {
+            return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
+        }
+
+        //Prüfen ob der Status auf Aktiv ist
+        if (packlisten[0].status != 'Aktiv') {
+            return res.status(409).json({ fehler: 'Packliste kann nur im aktiven Status zurückgegeben werden' });
+        }
+
+        //Prüfen, ob das Material zur Packliste gehört
+        const [material] = await pool.query(
+            'SELECT mengeSoll FROM material WHERE materialId = ? AND packlisteId = ?',
+            [materialId, packlisteId]
+        );
+
+        //Wenn es kein Material gibt
+        if (!material[0]) {
+            return res.status(404).json({ fehler: 'Material gehört nicht zur Packliste' });
+        }
+
+        //Rückgabe und Aktualisierung der Werte
+        const[zeilen] = await pool.query(
+            'UPDATE material SET mengeIst = ?, notiz = ? WHERE packlisteId = ? AND materialId = ?',
+            [mengeIst, notiz || null, materialId, packlisteId]
+        );
+
+        res.json({ materialId, mengeIst, notiz })
     }
     catch (err) {
         console.error(err);
