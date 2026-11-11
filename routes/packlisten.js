@@ -189,6 +189,7 @@ router.get('/:packlisteId/box', eingeloggt, async (req, res) => {
             [packlisteId]
         );
 
+        //Boxen in box_material einsehen
         for (const zeile of box) {
             const[boxInhalt] = await pool.query(
                 'SELECT materialId, mengeGepackt FROM box_material WHERE boxId = ?',
