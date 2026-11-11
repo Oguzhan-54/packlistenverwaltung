@@ -186,7 +186,86 @@ router.get('/:packlisteId/box', eingeloggt, async (req, res) => {
         console.error(err);
         res.status(500).json({ fehler: 'Serverfehler' });
     }
+});
 
+//Material zur Box hinzufügen
+router.post('/:packlisteId/box/:boxId/material', eingeloggt, async (req, res) => {
+    const packlisteId = req.params.packlisteId;
+    const boxId = req.params.boxId;
+    const { materialId, mengeGepackt } = req.body;
+    const fehler = { fehler: 'Eingaben unvollständig' };
+
+    //Eingabe prüfen
+    if (!materialId || mengeGepackt < 0) {
+        return res.status(400).json(fehler);
+    }
+
+    try {
+        //Status der Packliste prüfen
+        const [packlisten] = await pool.query(
+            'SELECT status FROM packliste WHERE packlisteId = ?',
+            [packlisteId]
+        );
+        //Prüfen ob Packliste vorhanden ist
+        if (!packlisten[0]) {
+            return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
+        }
+
+        //Prüfen ob der Status auf Entwurf ist
+        if (packlisten[0].status != 'Entwurf') {
+            return res.status(409).json({ fehler: 'Material kann nur zur Box im Status Entwurf hinzugefügt werden' });
+        }
+
+        //Prüfen, ob die Box zur Packliste gehört
+        const [boxen] = await pool.query(
+            'SELECT boxId FROM box WHERE boxId = ? AND packlisteId = ?',
+            [boxId, packlisteId]
+        );
+
+        if (!boxen[0]) {
+            return res.status(404).json({ fehler: 'Box gehört nicht zur Packliste' });
+        }
+
+        //Prüfen, ob das Material zur Packliste gehört
+        const [material] = await pool.query(
+            'SELECT mengeSoll FROM material WHERE materialId = ? AND packlisteId = ?',
+            [materialId, packlisteId]
+        );
+
+        //Wenn es kein Material gibt
+        if (!material[0]) {
+            return res.status(404).json({ fehler: 'Material gehört nicht zur Packliste' });
+        }
+
+        //Prüfen, ob MengeGepackt größer als MengeSoll ist
+        const [summen] = await pool.query(
+            'SELECT mengeGepackt FROM box_material WHERE materialId = ? AND boxId != ?',
+            [materialId, boxId]
+        );
+
+        //Summe aus materialGepackt ausrechnen
+        let summe = 0;
+        for (const zeile of summen) {
+            summe = summe + zeile.mengeGepackt;
+        }
+
+        //Wenn mengeGepackt > mengeSoll ist dann Fehlermeldung
+        if (summe + Number(mengeGepackt) > material[0].mengeSoll) {
+            return res.status(409).json({ fehler: 'Menge Gepackt kann nicht größer als Menge soll sein' });
+        }
+
+        //Material in Box hinzufügen
+        const [zeilen] = await pool.query(
+            'INSERT INTO box_material (boxId, materialId, mengeGepackt) VALUES (?, ?, ?)',
+            [boxId, materialId, mengeGepackt]
+        );
+
+        res.status(201).json({ boxId, materialId, mengeGepackt })
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
 });
 
 module.exports = router;
