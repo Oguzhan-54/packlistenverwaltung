@@ -1,6 +1,6 @@
 const express = require('express');
 const pool = require('../db');
-const { eingeloggt } = require('../middleware/berechtigung');
+const { eingeloggt, admin } = require('../middleware/berechtigung');
 
 const router = express.Router();
 
@@ -256,11 +256,44 @@ router.post('/:packlisteId/box/:boxId/material', eingeloggt, async (req, res) =>
 
         //Material in Box hinzufügen
         const [zeilen] = await pool.query(
-            'INSERT INTO box_material (boxId, materialId, mengeGepackt) VALUES (?, ?, ?)',
-            [boxId, materialId, mengeGepackt]
+            'INSERT INTO box_material (boxId, materialId, mengeGepackt) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE mengeGepackt = ?',
+            [boxId, materialId, mengeGepackt, mengeGepackt]
         );
 
         res.status(201).json({ boxId, materialId, mengeGepackt })
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
+//Status der Packliste ändern
+router.post('/:packlisteId/aktivieren', eingeloggt, admin, async (req, res) => {
+    const packlisteId = req.params.packlisteId;
+
+    try {
+        //Status der Packliste prüfen
+        const [packlisten] = await pool.query(
+            'SELECT status FROM packliste WHERE packlisteId = ?',
+            [packlisteId]
+        );
+        //Prüfen ob Packliste vorhanden ist
+        if (!packlisten[0]) {
+            return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
+        }
+
+        //Prüfen ob der Status auf Entwurf ist
+        if (packlisten[0].status != 'Entwurf') {
+            return res.status(409).json({ fehler: 'Status ist nicht Entwurf' });
+        }
+
+        const[zeilen] = await pool.query(
+            'UPDATE packliste SET status = ? WHERE packlisteId = ?',
+            ['Aktiv', packlisteId]
+        )
+
+        res.json({ status: 'Aktiv' });
     }
     catch (err) {
         console.error(err);
