@@ -170,4 +170,23 @@ router.post('/:packlisteId/box', eingeloggt, async (req, res) => {
     }
 });
 
+//Boxen einsehen
+router.get('/:packlisteId/box', eingeloggt, async (req, res) => {
+    const packlisteId = req.params.packlisteId; 
+
+    try {
+        const [box] = await pool.query(
+            'SELECT boxId, name FROM box WHERE packlisteId = ?',
+            [packlisteId]
+        );
+
+        res.json(box);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+
+});
+
 module.exports = router;
