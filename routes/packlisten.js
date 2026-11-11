@@ -278,6 +278,7 @@ router.post('/:packlisteId/aktivieren', eingeloggt, admin, async (req, res) => {
             'SELECT status FROM packliste WHERE packlisteId = ?',
             [packlisteId]
         );
+
         //Prüfen ob Packliste vorhanden ist
         if (!packlisten[0]) {
             return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
@@ -348,6 +349,51 @@ router.put('/:packlisteId/material/:materialId/rueckgabe', eingeloggt, async (re
         );
 
         res.json({ materialId, mengeIst, notiz })
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
+//Packliste archivieren
+router.post('/:packlisteId/archivieren', eingeloggt, async (req, res) => {
+    const packlisteId = req.params.packlisteId;
+
+    try {
+        //Status der Packliste prüfen
+        const [packlisten] = await pool.query(
+            'SELECT status FROM packliste WHERE packlisteId = ?',
+            [packlisteId]
+        );
+
+        //Prüfen ob Packliste vorhanden ist
+        if (!packlisten[0]) {
+            return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
+        }
+
+        //Prüfen ob der Status auf Aktiv ist
+        if (packlisten[0].status != 'Aktiv') {
+            return res.status(409).json({ fehler: 'Packliste kann nur im aktiven Status archiviert werden' });
+        }
+
+        //Prüfen ob es noch offene Positionen gibt
+        const [offen] = await pool.query(
+            'SELECT COUNT(*) AS anzahl FROM material WHERE packlisteId = ? AND mengeIst IS NULL',
+            [packlisteId]
+        )
+
+        if (offen[0].anzahl > 0) {
+            return res.status(409).json({ fehler: 'Es gibt noch offene Positionen' });
+        }
+
+        //Status auf Archiv setzen
+        const[zeilen] = await pool.query(
+            'UPDATE packliste SET status = ? WHERE packlisteId = ?',
+            ['Archiv', packlisteId]
+        )
+
+        res.json({ status: 'Archiv' })
     }
     catch (err) {
         console.error(err);
