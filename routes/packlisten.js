@@ -69,6 +69,7 @@ router.post('/', eingeloggt, async (req, res) => {
     }
 });
 
+//Material zur Packliste hinzufügen
 router.post('/:packlisteId/material', eingeloggt, async (req, res) => {
     const packlisteId = req.params.packlisteId; 
     const { bezeichnung, mengeSoll } = req.body;
@@ -108,6 +109,25 @@ router.post('/:packlisteId/material', eingeloggt, async (req, res) => {
         console.error(err);
         res.status(500).json({ fehler: 'Serverfehler' });
     }
-})
+});
+
+//Material einsehen
+router.get('/:packlisteId/material', eingeloggt, async (req, res) => {
+    const packlisteId = req.params.packlisteId; 
+
+    try {
+        const [material] = await pool.query(
+            'SELECT materialId, bezeichnung, mengeSoll, mengeIst, notiz FROM material WHERE packlisteId = ?',
+            [packlisteId]
+        );
+
+        res.json(material);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+
+});
 
 module.exports = router;
