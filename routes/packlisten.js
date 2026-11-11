@@ -68,4 +68,28 @@ router.post('/', eingeloggt, async (req, res) => {
     }
 });
 
+router.post('/:packlisteId/material', eingeloggt, async (req, res) => {
+    const packlisteId = req.params.packlisteId; 
+    const { bezeichnung, mengeSoll } = req.body;
+    const fehler = { fehler: 'Eingaben unvollständig' };
+
+    //Eingabe prüfen
+    if (!bezeichnung || !mengeSoll || mengeSoll < 1) {
+        return res.status(400).json(fehler);
+    }
+
+    try {
+        const [zeilen] = await pool.query(
+            'INSERT INTO material (packlisteId, bezeichnung, mengeSoll) VALUES (?, ?, ?)',
+            [packlisteId, bezeichnung, mengeSoll]
+        );
+
+        res.status(201).json({ materialId: zeilen.insertId })
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+})
+
 module.exports = router;
