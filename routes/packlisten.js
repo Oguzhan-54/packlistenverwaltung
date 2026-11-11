@@ -37,6 +37,7 @@ router.post('/', eingeloggt, async (req, res) => {
         verbindung = await pool.getConnection(); //Verbindung holen
         await verbindung.beginTransaction(); //Transaction starten
         
+        //Packliste anlegen
         const [zeilen] = await verbindung.query(
             'INSERT INTO packliste (name, jobnummer, startDatum, endDatum, erstelltVon) VALUES (?, ?, ?, ?, ?)',
             [name, jobnummer, startDatum, endDatum, req.session.benutzer.id]
@@ -79,6 +80,23 @@ router.post('/:packlisteId/material', eingeloggt, async (req, res) => {
     }
 
     try {
+        //Status der Packliste prüfen
+        const [packlisten] = await pool.query(
+            'SELECT status FROM packliste WHERE packlisteId = ?',
+            [packlisteId]
+        );
+
+        //Prüfen ob Packliste vorhanden ist
+        if (!packlisten[0]) {
+            return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
+        }
+
+        //Prüfen ob der Status auf Entwurf ist
+        if (packlisten[0].status != 'Entwurf') {
+            return res.status(409).json({ fehler: 'Material kann nur im Status Entwurf hinzugefügt werden' });
+        }
+
+        //Material anlegen
         const [zeilen] = await pool.query(
             'INSERT INTO material (packlisteId, bezeichnung, mengeSoll) VALUES (?, ?, ?)',
             [packlisteId, bezeichnung, mengeSoll]
