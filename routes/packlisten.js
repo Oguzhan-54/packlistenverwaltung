@@ -130,4 +130,44 @@ router.get('/:packlisteId/material', eingeloggt, async (req, res) => {
 
 });
 
+//Boxen zur Packliste hinzufügen
+router.post('/:packlisteId/box', eingeloggt, async (req, res) => {
+    const packlisteId = req.params.packlisteId;
+    const { name } = req.body;
+    const fehler = { fehler: 'Eingaben unvollständig' };
+
+    //Prüfen ob Name eingetragen wurde
+    if (!name) {
+        return res.status(400).json(fehler);
+    }
+
+    try {
+        //Status der Packliste prüfen
+        const [packlisten] = await pool.query(
+            'SELECT status FROM packliste WHERE packlisteId = ?',
+            [packlisteId]
+        );
+        //Prüfen ob Packliste vorhanden ist
+        if (!packlisten[0]) {
+            return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
+        }
+
+        //Prüfen ob der Status auf Entwurf ist
+        if (packlisten[0].status != 'Entwurf') {
+            return res.status(409).json({ fehler: 'Boxen können nur im Status Entwurf hinzugefügt werden' });
+        }
+
+        const [zeilen] = await pool.query(
+            'INSERT INTO box (packlisteId, name) VALUES (?, ?)',
+            [packlisteId, name] 
+        )
+
+        res.status(201).json({ boxId: zeilen.insertId });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
 module.exports = router;
