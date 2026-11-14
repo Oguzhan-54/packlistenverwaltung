@@ -73,12 +73,6 @@ router.post('/', eingeloggt, async (req, res) => {
 router.post('/:packlisteId/material', eingeloggt, async (req, res) => {
     const packlisteId = req.params.packlisteId; 
     const { bezeichnung, mengeSoll } = req.body;
-    const fehler = { fehler: 'Eingaben unvollständig' };
-
-    //Eingabe prüfen
-    if (!bezeichnung || !mengeSoll || mengeSoll < 1) {
-        return res.status(400).json(fehler);
-    }
 
     try {
         //Status der Packliste prüfen
@@ -90,11 +84,6 @@ router.post('/:packlisteId/material', eingeloggt, async (req, res) => {
         //Prüfen ob Packliste vorhanden ist
         if (!packlisten[0]) {
             return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
-        }
-
-        //Prüfen ob der Status auf Entwurf ist
-        if (packlisten[0].status != 'Entwurf') {
-            return res.status(409).json({ fehler: 'Material kann nur im Status Entwurf hinzugefügt werden' });
         }
 
         //Material anlegen
@@ -161,11 +150,7 @@ router.post('/:packlisteId/box', eingeloggt, async (req, res) => {
             return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
         }
 
-        //Prüfen ob der Status auf Entwurf ist
-        if (packlisten[0].status != 'Entwurf') {
-            return res.status(409).json({ fehler: 'Boxen können nur im Status Entwurf hinzugefügt werden' });
-        }
-
+        //Box hinzufügen
         const [zeilen] = await pool.query(
             'INSERT INTO box (packlisteId, name) VALUES (?, ?)',
             [packlisteId, name] 
@@ -224,33 +209,18 @@ router.post('/:packlisteId/box/:boxId/material', eingeloggt, async (req, res) =>
             'SELECT status FROM packliste WHERE packlisteId = ?',
             [packlisteId]
         );
+
         //Prüfen ob Packliste vorhanden ist
         if (!packlisten[0]) {
             return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
         }
 
-        //Prüfen ob der Status auf Entwurf ist
-        if (packlisten[0].status != 'Entwurf') {
-            return res.status(409).json({ fehler: 'Material kann nur zur Box im Status Entwurf hinzugefügt werden' });
-        }
-
-        //Prüfen, ob die Box zur Packliste gehört
-        const [boxen] = await pool.query(
-            'SELECT boxId FROM box WHERE boxId = ? AND packlisteId = ?',
-            [boxId, packlisteId]
-        );
-
-        if (!boxen[0]) {
-            return res.status(404).json({ fehler: 'Box gehört nicht zur Packliste' });
-        }
-
-        //Prüfen, ob das Material zur Packliste gehört
+        //Material holen und prüfen, ob es zur Packliste gehört
         const [material] = await pool.query(
             'SELECT mengeSoll FROM material WHERE materialId = ? AND packlisteId = ?',
             [materialId, packlisteId]
         );
 
-        //Wenn es kein Material gibt
         if (!material[0]) {
             return res.status(404).json({ fehler: 'Material gehört nicht zur Packliste' });
         }
@@ -305,7 +275,7 @@ router.post('/:packlisteId/aktivieren', eingeloggt, admin, async (req, res) => {
         //Prüfen ob der Status auf Entwurf ist
         if (packlisten[0].status != 'Entwurf') {
             return res.status(409).json({ fehler: 'Status ist nicht Entwurf' });
-        }
+}
 
         //Status auf Aktiv setzen
         const[zeilen] = await pool.query(
@@ -342,22 +312,6 @@ router.put('/:packlisteId/material/:materialId/rueckgabe', eingeloggt, async (re
         //Prüfen ob Packliste vorhanden ist
         if (!packlisten[0]) {
             return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
-        }
-
-        //Prüfen ob der Status auf Aktiv ist
-        if (packlisten[0].status != 'Aktiv') {
-            return res.status(409).json({ fehler: 'Packliste kann nur im aktiven Status zurückgegeben werden' });
-        }
-
-        //Prüfen, ob das Material zur Packliste gehört
-        const [material] = await pool.query(
-            'SELECT mengeSoll FROM material WHERE materialId = ? AND packlisteId = ?',
-            [materialId, packlisteId]
-        );
-
-        //Wenn es kein Material gibt
-        if (!material[0]) {
-            return res.status(404).json({ fehler: 'Material gehört nicht zur Packliste' });
         }
 
         //Rückgabe und Aktualisierung der Werte
@@ -399,7 +353,7 @@ router.post('/:packlisteId/archivieren', eingeloggt, async (req, res) => {
         const [offen] = await pool.query(
             'SELECT COUNT(*) AS anzahl FROM material WHERE packlisteId = ? AND mengeIst IS NULL',
             [packlisteId]
-        )
+        );
 
         if (offen[0].anzahl > 0) {
             return res.status(409).json({ fehler: 'Es gibt noch offene Positionen' });
@@ -419,6 +373,7 @@ router.post('/:packlisteId/archivieren', eingeloggt, async (req, res) => {
     }
 });
 
+//Packlisten im Archiv einsehen
 router.get('/archiv', eingeloggt, async (req, res) => {
     try {
         const [zeilen] = await pool.query(
