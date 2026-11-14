@@ -21,7 +21,6 @@ async function packlisteAnlegen() {
             document.getElementById('fehlermeldung').hidden = false;
         }
     }
-
 }
 
 const button = document.getElementById('packliste-anlegen');
