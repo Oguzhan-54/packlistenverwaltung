@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packliste anlegen</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header>
+        <a href="index.html">Übersicht</a>
+        <a href="archiv.html">Archiv</a>
+        <span id="benutzername"></span>
+        <button id="logout">Logout</button>
+    </header>
+    <main>
+        <div>
+            <label for="name">Name</label>
+            <input type="text" id="name">
+            <label for="jobnummer">Jobnummer</label>
+            <input type="text" id="jobnummer">
+            <label for="startDatum">Start</label>
+            <input type="date" id="startDatum">
+            <label for="endDatum">Ende</label>
+            <input type="date" id="endDatum">
+            <button id="packliste-anlegen">+ Packliste anlegen</button>
+        </div>
+
+        <p id="fehlermeldung" hidden>Eingaben unvollständig</p>
+        
+    </main>
+
+    <script src="./js/login-pruefen.js"></script>
+    <script src="./js/packliste-anlegen.js"></script>
+</body>
+</html>
