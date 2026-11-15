@@ -388,4 +388,29 @@ router.get('/archiv', eingeloggt, async (req, res) => {
     }
 });
 
+//Eine einzelne Packliste einsehen
+router.get('/:packlisteId', eingeloggt, async (req, res) => {
+    const packlisteId = req.params.packlisteId;
+
+    try {
+        //Packliste holen
+        const [packlisten] = await pool.query(
+            'SELECT packlisteId, name, jobnummer, startDatum, endDatum, status FROM packliste WHERE packlisteId = ?',
+            [packlisteId]
+        );
+
+        //Fehlermeldung wenn nicht gefunden
+        if (!packlisten[0]) {
+            return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
+        }
+
+        //Ergebnis 
+        res.json(packlisten[0]);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
 module.exports = router;

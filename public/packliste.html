@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Übersicht</title>
+    <title>Packliste</title>
     <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -17,13 +17,23 @@
         <div id="container-kopf">
             <h1 id="packliste-name"></h1>
             <p id="packliste-infos"></p>
+            <button id="aktivieren" hidden>Aktivieren</button>
+            <button id="archivieren" hidden>Archivieren</button>
+            <p id="status-fehler" hidden></p>
         </div>
 
         <div id="container-inhalt">
             <section>
                 <h2>Material</h2>
-                <div id="container-material">
-    
+                <div id="container-material"></div>
+
+                <div id="material-formular">
+                    <label for="bezeichnung">Bezeichnung</label>
+                    <input type="text" id="bezeichnung">
+                    <label for="mengeSoll">Menge Soll</label>
+                    <input type="number" id="mengeSoll" min="1">
+                    <button id="material-anlegen">+ Material</button>
+                    <p id="material-fehler" hidden>Material konnte nicht angelegt werden. Bitte Bezeichnung und eine Menge ab 1 eingeben.</p>
                 </div>
             </section>
     
