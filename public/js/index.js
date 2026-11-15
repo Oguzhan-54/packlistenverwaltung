@@ -1,6 +1,6 @@
 async function packlistenLaden() {
     const antwort = await fetch('/api/packlisten');
-    const packlisten = await antwort.json(); //Antwort in ein Array mit einem Objekt pro Packliste
+    const packlisten = await antwort.json(); //JSON Text auspacken und in eine Liste ablegen
 
     const container = document.getElementById('container-packlisten');
     container.innerHTML = '';

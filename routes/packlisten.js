@@ -177,7 +177,7 @@ router.get('/:packlisteId/box', eingeloggt, async (req, res) => {
         //Boxen in box_material einsehen
         for (const zeile of box) {
             const[boxInhalt] = await pool.query(
-                'SELECT materialId, mengeGepackt FROM box_material WHERE boxId = ?',
+                'SELECT box_material.materialId, material.bezeichnung, box_material.mengeGepackt FROM box_material JOIN material ON box_material.materialId = material.materialId WHERE box_material.boxId = ?',
                 [zeile.boxId]
             );
             zeile.inhalt = boxInhalt;

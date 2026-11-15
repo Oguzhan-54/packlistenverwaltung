@@ -1,0 +1,8 @@
+#container-inhalt {
+    display: flex;
+    gap: 2rem;
+}
+
+#container-inhalt section {
+    flex: 1;
+}
