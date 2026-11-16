@@ -116,7 +116,7 @@ label {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
 }
 
 .kopf-zeile h1 {
@@ -172,8 +172,19 @@ label {
     color: white;
 }
 
-#container-kopf {
-    margin-bottom: 1.5rem;
+.packliste-kopf {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+}
+
+.packliste-kopf > * {
+    grid-column: 1;
+}
+
+#aktivieren, #archivieren {
+    grid-column: 2;
+    grid-row: 1;
 }
 
 #container-inhalt {
@@ -196,15 +207,19 @@ label {
     border-radius: 12px;
     padding: 0.8rem;
     margin-bottom: 0.8rem;
-}
-
-#container-material > div {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
     gap: 0.5rem;
+}
+
+#container-material > div {
+    justify-content: space-between;
     overflow-wrap: anywhere;
+}
+
+#container-material > div > div {
+    flex: 0 0 100%;
 }
 
 #container-boxen > div > div {
@@ -216,10 +231,39 @@ label {
     padding: 0.5rem 0;
 }
 
+#container-boxen > div > .box-kopf {
+    border-top: none;
+    padding: 0 0 0.5rem 0;
+}
+
+.box-kopf h3 {
+    font-size: 1.15rem;
+    margin: 0;
+}
+
 #material-formular input, #box-formular input {
     display: block;
     width: 100%;
     margin-bottom: 0.8rem;
+}
+
+.formular-karte {
+    background-color: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 20px;
+    padding: 1.25rem;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr) auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+.formular-karte input, .formular-karte button {
+    height: 2.75rem;
+}
+
+.formular-karte input {
+    width: 100%;
 }
 
 .login-karte {
@@ -238,36 +282,4 @@ label {
 
 #login-form button {
     margin-top: 1rem;
-}
-
-.packliste-kopf {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: start;
-}
-
-.packliste-kopf > * {
-    grid-column: 1;
-}
-
-#aktivieren, #archivieren {
-    grid-column: 2;
-    grid-row: 1;
-}
-
-#container-boxen > div {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-#container-boxen > div > .box-kopf {
-    border-top: none;
-    padding: 0 0 0.5rem 0;
-}
-
-.box-kopf h3 {
-    font-size: 1.15rem;
-    margin: 0;
 }

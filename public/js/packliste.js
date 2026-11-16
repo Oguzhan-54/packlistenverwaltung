@@ -60,6 +60,17 @@ async function materialLaden() {
             eintrag.appendChild(speichernButton);
         }
 
+        //Im Archiv die Rückgabe anzeigen
+        if (packlisteStatus == 'Archiv') {
+            const rueckgabe = document.createElement('div');
+            rueckgabe.textContent = 'Ist: ' + material.mengeIst;
+            //Wurde eine Notiz eingegeben?
+            if (material.notiz) { 
+                rueckgabe.textContent = rueckgabe.textContent + ' | Notiz: ' + material.notiz; //Dann die Notiz anhängen
+            }
+            eintrag.appendChild(rueckgabe); //Rückgabe-Daten in den Eintrag einfügen
+        }
+
         //Material löschen
         if (packlisteStatus == 'Entwurf') { //Nur im Status Entwurf möglich
             const loeschenButton = document.createElement('button');
