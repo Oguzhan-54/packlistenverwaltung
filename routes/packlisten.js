@@ -413,4 +413,54 @@ router.get('/:packlisteId', eingeloggt, async (req, res) => {
     }
 });
 
+//Material löschen
+router.delete('/:packlisteId/material/:materialId', eingeloggt, async (req, res) => {
+    try {
+        const { packlisteId, materialId } = req.params; //Id aus der URL holen
+
+        //Prüfen, ob das Material zu dieser Packliste gehört
+        const [material] = await pool.query(
+            'SELECT materialId FROM material WHERE materialId = ? AND packlisteId = ?',
+            [materialId, packlisteId]
+        );
+        
+        //Zuerst das Material aus allen Boxen entfernen
+        await pool.query('DELETE FROM box_material WHERE materialId = ?', [materialId]);
+        //Danach das Material löschen
+        await pool.query('DELETE FROM material WHERE materialId = ?', [materialId]);
+
+        res.json({ nachricht: 'Material gelöscht' });
+    }
+    //Bei Fehler
+    catch (fehler) {
+        console.error(fehler);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
+//Box löschen
+router.delete('/:packlisteId/box/:boxId', eingeloggt, async (req, res) => {
+    try {
+        const { packlisteId, boxId } = req.params; //Id aus der URL holen
+
+        //Prüfen, ob die Box zu dieser Packliste gehört
+        const [box] = await pool.query(
+            'SELECT boxId FROM box WHERE boxId = ? AND packlisteId = ?',
+            [boxId, packlisteId]
+        );
+
+        //Zuerst den Inhalt der Box entfernen
+        await pool.query('DELETE FROM box_material WHERE boxId = ?', [boxId]); 
+        //Danach die Box löschen löschen
+        await pool.query('DELETE FROM box WHERE boxId = ?', [boxId]); 
+
+        res.json({ nachricht: 'Box gelöscht' });
+    }
+    //Bei Fehler
+    catch (fehler) {
+        console.error(fehler);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
 module.exports = router;
