@@ -239,7 +239,7 @@ router.post('/:packlisteId/box/:boxId/material', eingeloggt, async (req, res) =>
 
         //Wenn mengeGepackt > mengeSoll ist dann Fehlermeldung
         if (summe + Number(mengeGepackt) > material[0].mengeSoll) {
-            return res.status(409).json({ fehler: 'Menge Gepackt kann nicht größer als Menge soll sein' });
+            return res.status(409).json({ fehler: 'Menge Gepackt kann nicht größer als Menge Soll sein' });
         }
 
         //Material in Box hinzufügen
@@ -317,7 +317,7 @@ router.put('/:packlisteId/material/:materialId/rueckgabe', eingeloggt, async (re
         //Rückgabe und Aktualisierung der Werte
         const[zeilen] = await pool.query(
             'UPDATE material SET mengeIst = ?, notiz = ? WHERE packlisteId = ? AND materialId = ?',
-            [mengeIst, notiz || null, materialId, packlisteId]
+            [mengeIst, notiz || null, packlisteId, materialId]
         );
 
         res.json({ materialId, mengeIst, notiz })
@@ -404,7 +404,7 @@ router.get('/:packlisteId', eingeloggt, async (req, res) => {
             return res.status(404).json({ fehler: 'Packliste nicht gefunden' });
         }
 
-        //Ergebnis 
+        //Ergebnis
         res.json(packlisten[0]);
     }
     catch (err) {

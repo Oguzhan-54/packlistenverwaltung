@@ -18,6 +18,8 @@ async function packlisteLaden() {
     document.getElementById('material-formular').hidden = packlisteStatus != 'Entwurf';
     document.getElementById('aktivieren').hidden = packlisteStatus != 'Entwurf';
     document.getElementById('archivieren').hidden = packlisteStatus != 'Aktiv';
+    //Box anlegen Formular sichtbar machen bei Status Entwurf
+    document.getElementById('box-formular').hidden = packlisteStatus != 'Entwurf';
 }
 
 async function materialLaden() {
@@ -31,7 +33,7 @@ async function materialLaden() {
     //Jedes Material durchgehen und auf der Seite anzeigen
     for (const material of materialien) {
         const eintrag = document.createElement('div');
-        eintrag.textContent = material.bezeichnung + ' Gepackt: ' + material.mengeGepackt + ' Soll: ' + material.mengeSoll;
+        eintrag.textContent = material.bezeichnung + ' Soll: ' + material.mengeSoll + ' Gepackt: ' + material.mengeGepackt;
         
         //Bei aktiver Packliste die Felder für die Rückgabe anzeigen
         if (packlisteStatus == 'Aktiv') {
@@ -170,13 +172,13 @@ async function statusAendern(aktion) {
     //Bei Erfolg
     if (antwort.ok) {
         fehler.hidden = true;
-        packlisteLaden(); //Seite neu laden damit der neue Status angezeigt wird
+        if (aktion === 'archivieren') {
+            window.location.href = '/';
+        }
     }
-    //Bei Fehler
+    //Bei aktivieren
     else {
-        const daten = await antwort.json(); //Fehlerantwort auspacken
-        fehler.textContent = daten.fehler; //Fehler hier rein schreiben
-        fehler.hidden = false;
+        seiteLaden(); //Seite neu laden
     }
 }
 
@@ -186,6 +188,75 @@ document.getElementById('aktivieren').addEventListener('click', function () {
 document.getElementById('archivieren').addEventListener('click', function () {
     statusAendern('archivieren'); // Archivieren Route aufrufen
 });
+
+const materialButton = document.getElementById('material-anlegen');
+materialButton.addEventListener('click', materialAnlegen);
+
+//Materialien anlegen
+async function materialAnlegen() {
+    const bezeichnung = document.getElementById('bezeichnung').value;
+    const mengeSoll = document.getElementById('mengeSoll').value;
+    const fehler = document.getElementById('material-fehler');
+
+    //Wenn Eingabe fehlt oder Menge unter 1 ist
+    if (!bezeichnung || !mengeSoll || mengeSoll < 1) {
+        fehler.hidden = false;
+        return;
+    }
+
+    //Anfrage an die Backend Route
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/material', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bezeichnung, mengeSoll }) //Bezeichnung und Menge als JSON-Text mitschicken
+    });
+
+    //Bei Erfolg
+    if (antwort.ok) {
+        fehler.hidden = true;
+        document.getElementById('bezeichnung').value = ''; //Felder leeren
+        document.getElementById('mengeSoll').value = ''; 
+        seiteLaden(); //Seite neu laden, damit das Material in der Liste erscheint
+    }
+    //Bei Fehler
+    else {
+        fehler.hidden = false;
+    }
+}
+
+//Neue Box anlegen
+async function boxAnlegen() {
+    //Eingaben lesen
+    const name = document.getElementById('boxName').value;
+    const fehler = document.getElementById('box-fehler');
+
+    //Prüfung ob Name eingetragen wurde
+    if (!name) {
+        fehler.hidden = false;
+        return;
+    }
+
+    //Anfrage an die Backend Route
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/box', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }) //Name als JSON schicken
+    });
+
+    //Bei Erfolg
+    if (antwort.ok) {
+        fehler.hidden = true;
+        document.getElementById('boxName').value = '';
+        seiteLaden();
+    } 
+    //Bei Fehler
+    else {
+        fehler.hidden = false;
+    }
+}
+
+const boxBtn = document.getElementById('box-anlegen');
+boxBtn.addEventListener('click', boxAnlegen);
 
 //Alles der Reihe nach laden
 async function seiteLaden() {
