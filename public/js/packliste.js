@@ -2,6 +2,7 @@ const parameter = new URLSearchParams(window.location.search); //URL durchsuchen
 const packlisteId = parameter.get('id'); //id aus der URL in eine const packen
 
 let packlisteStatus = '';
+let materialListe = [];
 
 async function packlisteLaden() {
     const antwort = await fetch('/api/packlisten/' + packlisteId); //Packliste holen
@@ -18,11 +19,11 @@ async function packlisteLaden() {
     document.getElementById('aktivieren').hidden = packlisteStatus != 'Entwurf';
     document.getElementById('archivieren').hidden = packlisteStatus != 'Aktiv';
 }
-packlisteLaden();
 
 async function materialLaden() {
     const antwort = await fetch('/api/packlisten/' +packlisteId + '/material');
     const materialien = await antwort.json(); //JSON Text auspacken und in eine Liste ablegen
+    materialListe = materialien; //Materialien in Material Liste (Array) schreiben
 
     const container = document.getElementById('container-material');
     container.innerHTML = '';
@@ -60,7 +61,6 @@ async function materialLaden() {
         container.appendChild(eintrag);
     }
 }
-materialLaden();
 
 async function boxenLaden() {
     const antwort = await fetch('/api/packlisten/' + packlisteId + '/box'); //Server nach den Boxen abfragen
@@ -81,11 +81,36 @@ async function boxenLaden() {
             boxEintrag.appendChild(zeile);
         }
 
+        //Packen nur im Status Entwurf möglich
+        if (packlisteStatus == 'Entwurf') {
+            const auswahl = document.createElement('select'); //Dropdown Feld anlegen
+            for (const material of materialListe) {
+                const option = document.createElement('option'); //Auswahlmöglichkeit anlegen
+                option.value = material.materialId;
+                option.textContent = material.bezeichnung;
+                auswahl.appendChild(option); //Option in das Dropdownfeld anhängen
+            }
+
+            const menge = document.createElement('input'); //Eingabefeld anlegen
+            menge.type = 'number';
+            menge.min = 0;
+            menge.value = 1;
+
+            const packenBtn = document.createElement('button'); //Button anlegen
+            packenBtn.textContent = 'Packen';
+            packenBtn.addEventListener('click', function () { //Beim Klick auf den Button wird die packen Funktion aufgerufen
+                packen(box.boxId, auswahl.value, menge.value);
+            });
+
+            boxEintrag.appendChild(auswahl);
+            boxEintrag.appendChild(menge);
+            boxEintrag.appendChild(packenBtn);
+        }
+
         //Fertige Box zusammenfügen und anzeigen
         container.appendChild(boxEintrag);
     }
 }
-boxenLaden();
 
 async function rueckgabeSpeichern(materialId, mengeIst, notiz) {
     const fehler = document.getElementById('status-fehler');
@@ -114,3 +139,58 @@ async function rueckgabeSpeichern(materialId, mengeIst, notiz) {
         fehler.hidden = false;
     }
 }
+
+async function packen(boxId, materialId, mengeGepackt) {
+    const fehler = document.getElementById('packen-fehler');
+
+    //Anfrage an das Backend senden
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/box/' + boxId + '/material', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ materialId, mengeGepackt }) //Als JSON Objekt mitschicken
+    });
+
+    if (antwort.ok) {
+        fehler.hidden = true;
+        seiteLaden(); //Neu laden damit die neuen Mengen sichtbar sind
+    }
+    else {
+        const daten = await antwort.json(); //Fehlerantwort auspacken
+        fehler.textContent = daten.fehler; //Fehler vom Server rein schreiben
+        fehler.hidden = false;
+    }
+}
+
+async function statusAendern(aktion) {
+    const fehler = document.getElementById('status-fehler');
+
+    //Anfrage an die Backend Route, aktion wird vom EventListener übergeben
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/' + aktion, { method: 'POST' }); 
+
+    //Bei Erfolg
+    if (antwort.ok) {
+        fehler.hidden = true;
+        packlisteLaden(); //Seite neu laden damit der neue Status angezeigt wird
+    }
+    //Bei Fehler
+    else {
+        const daten = await antwort.json(); //Fehlerantwort auspacken
+        fehler.textContent = daten.fehler; //Fehler hier rein schreiben
+        fehler.hidden = false;
+    }
+}
+
+document.getElementById('aktivieren').addEventListener('click', function () {
+    statusAendern('aktivieren'); //Aktivieren Route aufrufen
+});
+document.getElementById('archivieren').addEventListener('click', function () {
+    statusAendern('archivieren'); // Archivieren Route aufrufen
+});
+
+//Alles der Reihe nach laden
+async function seiteLaden() {
+    await packlisteLaden();
+    await materialLaden();
+    await boxenLaden();
+}
+seiteLaden();
