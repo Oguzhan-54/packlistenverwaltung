@@ -463,4 +463,30 @@ router.delete('/:packlisteId/box/:boxId', eingeloggt, async (req, res) => {
     }
 });
 
+//Material aus einer Box entfernen
+router.delete('/:packlisteId/box/:boxId/material/:materialId', eingeloggt, async (req, res) => {
+    try { //Fehler abfangen
+        const { packlisteId, boxId, materialId } = req.params; //Id aus der URL holen
+
+        //Prüfen ob die Box zu dieser Packliste gehört
+        const [box] = await pool.query(
+            'SELECT boxId FROM box WHERE boxId = ? AND packlisteId = ?',
+            [boxId, packlisteId]
+        ); 
+
+        //Das Material löschen
+        const [ergebnis] = await pool.query(
+            'DELETE FROM box_material WHERE boxId = ? AND materialId = ?',
+            [boxId, materialId]
+        );
+
+        res.json({ nachricht: 'Material aus Box entfernt' });
+    }
+    //Bei Fehler
+    catch (fehler) {
+        console.error(fehler);
+        res.status(500).json({ fehler: 'Serverfehler' });
+    }
+});
+
 module.exports = router;

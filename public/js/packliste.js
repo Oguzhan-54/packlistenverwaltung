@@ -59,6 +59,16 @@ async function materialLaden() {
             eintrag.appendChild(notizFeld);
             eintrag.appendChild(speichernButton);
         }
+
+        //Material löschen
+        if (packlisteStatus == 'Entwurf') { //Nur im Status Entwurf möglich
+            const loeschenButton = document.createElement('button');
+            loeschenButton.textContent = 'Löschen';
+            loeschenButton.addEventListener('click', function () {
+                materialLoeschen(material.materialId);
+            });
+            eintrag.appendChild(loeschenButton); //Button an den Eintrag hängen
+        }
         
         container.appendChild(eintrag);
     }
@@ -80,7 +90,18 @@ async function boxenLaden() {
         for (const inhalt of box.inhalt) {
             const zeile = document.createElement('div');
             zeile.textContent = inhalt.bezeichnung + ': ' + inhalt.mengeGepackt;
-            boxEintrag.appendChild(zeile);
+
+            //Material aus Box entfernen nur im Status Entwurf möglich
+            if (packlisteStatus == 'Entwurf') {
+                const entfernenButton = document.createElement('button');
+                entfernenButton.textContent = 'Entfernen';
+                entfernenButton.addEventListener('click', function () {
+                    inhaltEntfernen(box.boxId, inhalt.materialId);
+                });
+                zeile.appendChild(entfernenButton);
+            }
+
+            boxEintrag.appendChild(zeile); //Zeile in die Box einfügen
         }
 
         //Packen nur im Status Entwurf möglich
@@ -107,6 +128,16 @@ async function boxenLaden() {
             boxEintrag.appendChild(auswahl);
             boxEintrag.appendChild(menge);
             boxEintrag.appendChild(packenBtn);
+        }
+
+        //Löschen nur im Status Entwurf möglich
+        if (packlisteStatus == 'Entwurf') {
+            const loeschenButton = document.createElement('button');
+            loeschenButton.textContent = 'Box löschen';
+            loeschenButton.addEventListener('click', function () {
+                boxLoeschen(box.boxId);
+            });
+            boxEintrag.appendChild(loeschenButton);
         }
 
         //Fertige Box zusammenfügen und anzeigen
@@ -257,6 +288,74 @@ async function boxAnlegen() {
 
 const boxBtn = document.getElementById('box-anlegen');
 boxBtn.addEventListener('click', boxAnlegen);
+
+//Material löschen
+async function materialLoeschen(materialId) { //materialId vom Button holen
+
+    const fehler = document.getElementById('status-fehler');
+
+    //Anfrage an die Backend Lösch-Route
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/material/' + materialId, {
+        method: 'DELETE'
+    });
+
+    //Bei Erfolg
+    if (antwort.ok) {
+        fehler.hidden = true;
+        seiteLaden();
+    }
+    //Bei Fehler
+    else {
+        const daten = await antwort.json();
+        fehler.textContent = daten.fehler;
+        fehler.hidden = false;
+    }
+}
+
+//Box löschen
+async function boxLoeschen(boxId) { //boxId kommt vom Button
+
+    const fehler = document.getElementById('packen-fehler');
+
+    //Anfrage an die Backend Lösch-Route
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/box/' + boxId, {
+        method: 'DELETE'
+    });
+
+    //Bei Erfolg
+    if (antwort.ok) {
+        fehler.hidden = true;
+        seiteLaden();
+    }
+    //Bei Fehler
+    else {
+        const daten = await antwort.json();
+        fehler.textContent = daten.fehler;
+        fehler.hidden = false;
+    }
+}
+
+//Material aus einer Box entfernen
+async function inhaltEntfernen(boxId, materialId) { //Id kommt vom Button
+    const fehler = document.getElementById('packen-fehler');
+
+    //Anfrage an die Backend Lösch-Route
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/box/' + boxId + '/material/' + materialId, {
+        method: 'DELETE'
+    });
+
+    //Bei Erfolg
+    if (antwort.ok) {
+        fehler.hidden = true;
+        seiteLaden();
+    }
+    //Bei Fehler
+    else {
+        const daten = await antwort.json();
+        fehler.textContent = daten.fehler;
+        fehler.hidden = false;
+    }
+}
 
 //Alles der Reihe nach laden
 async function seiteLaden() {
