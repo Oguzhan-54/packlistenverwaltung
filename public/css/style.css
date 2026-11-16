@@ -1,8 +1,273 @@
-#container-inhalt {
+* {
+    box-sizing: border-box;
+}
+
+[hidden] {
+    display: none !important;
+}
+
+body {
+    font-family: Helvetica, Arial, sans-serif;
+    background-color: #fafafa;
+    color: #222;
+    margin: 0;
+}
+
+header {
+    background-color: white;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 1rem 2rem;
     display: flex;
-    gap: 2rem;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+header nav {
+    display: flex;
+    gap: 1.5rem;
+}
+
+header a {
+    color: #666;
+    text-decoration: none;
+}
+
+header a:hover {
+    color: #222;
+}
+
+.logo {
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: #222;
+}
+
+.benutzer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+main {
+    max-width: 1280px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+h1 {
+    font-size: 2rem;
+    margin: 0 0 0.5rem 0;
+}
+
+h2 {
+    font-size: 1.15rem;
+    margin: 0 0 1rem 0;
+}
+
+button, .anlegen-button {
+    background-color: #222;
+    color: white;
+    border: 1px solid #222;
+    border-radius: 10px;
+    padding: 0.6rem 1rem;
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+button:hover, .anlegen-button:hover {
+    background-color: #444;
+}
+
+#logout {
+    background-color: white;
+    color: #222;
+    border: 1px solid #ccc;
+}
+
+#logout:hover {
+    background-color: #f2f2f2;
+}
+
+input, select {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    background-color: white;
+}
+
+label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin: 0.8rem 0 0.3rem 0;
+}
+
+#status-fehler, #packen-fehler, #material-fehler, #box-fehler, #fehlermeldung {
+    color: #b00020;
+    font-size: 0.9rem;
+}
+
+.kopf-zeile {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+}
+
+.kopf-zeile h1 {
+    margin: 0;
+}
+
+#container-packlisten {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+}
+
+#container-packlisten > div {
+    background-color: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 20px;
+    padding: 1.25rem;
+}
+
+#container-packlisten a {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+}
+
+#container-packlisten h3 {
+    font-size: 1.25rem;
+    margin: 0.9rem 0 0.6rem 0;
+}
+
+#container-packlisten p {
+    color: #666;
+    margin: 0;
+}
+
+.karte-kopf {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #666;
+}
+
+.status {
+    background-color: #eee;
+    color: #222;
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+}
+
+.status-aktiv {
+    background-color: #222;
+    color: white;
+}
+
+#container-kopf {
+    margin-bottom: 1.5rem;
+}
+
+#container-inhalt {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.25rem;
+    align-items: start;
 }
 
 #container-inhalt section {
-    flex: 1;
+    background-color: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 20px;
+    padding: 1.25rem;
+}
+
+#container-material > div, #container-boxen > div {
+    background-color: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    padding: 0.8rem;
+    margin-bottom: 0.8rem;
+}
+
+#container-material > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    overflow-wrap: anywhere;
+}
+
+#container-boxen > div > div {
+    flex: 0 0 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e5e5e5;
+    padding: 0.5rem 0;
+}
+
+#material-formular input, #box-formular input {
+    display: block;
+    width: 100%;
+    margin-bottom: 0.8rem;
+}
+
+.login-karte {
+    max-width: 420px;
+    margin: 8rem auto;
+    background-color: white;
+    border: 1px solid #e5e5e5;
+    border-radius: 20px;
+    padding: 2rem;
+}
+
+#login-form input {
+    display: block;
+    width: 100%;
+}
+
+#login-form button {
+    margin-top: 1rem;
+}
+
+.packliste-kopf {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+}
+
+.packliste-kopf > * {
+    grid-column: 1;
+}
+
+#aktivieren, #archivieren {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+#container-boxen > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#container-boxen > div > .box-kopf {
+    border-top: none;
+    padding: 0 0 0.5rem 0;
+}
+
+.box-kopf h3 {
+    font-size: 1.15rem;
+    margin: 0;
 }

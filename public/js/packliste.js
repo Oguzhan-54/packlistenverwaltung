@@ -33,7 +33,7 @@ async function materialLaden() {
     //Jedes Material durchgehen und auf der Seite anzeigen
     for (const material of materialien) {
         const eintrag = document.createElement('div');
-        eintrag.textContent = material.bezeichnung + ' Soll: ' + material.mengeSoll + ' Gepackt: ' + material.mengeGepackt;
+        eintrag.textContent = material.bezeichnung + ' | Soll: ' + material.mengeSoll + ' Gepackt: ' + material.mengeGepackt;
         
         //Bei aktiver Packliste die Felder für die Rückgabe anzeigen
         if (packlisteStatus == 'Aktiv') {
@@ -84,7 +84,25 @@ async function boxenLaden() {
     //Jede Box durchgehen
     for (const box of boxen) {
         const boxEintrag = document.createElement('div');
-        boxEintrag.textContent = box.name; //Box Name in das leere Div schreiben
+        
+        const boxKopf = document.createElement('div');
+        boxKopf.className = 'box-kopf';
+
+        const titel = document.createElement('h3');
+        titel.textContent = box.name; //Boxname eintragen
+        boxKopf.appendChild(titel);
+
+        //Löschen nur im Status Entwurf möglich
+        if (packlisteStatus == 'Entwurf') {
+            const loeschenButton = document.createElement('button');
+            loeschenButton.textContent = 'Box löschen';
+            loeschenButton.addEventListener('click', function () {
+                boxLoeschen(box.boxId);
+            });
+            boxKopf.appendChild(loeschenButton);
+        }
+
+        boxEintrag.appendChild(boxKopf);
 
         //Jedes Material in dieser Box durchgehen
         for (const inhalt of box.inhalt) {
@@ -128,16 +146,6 @@ async function boxenLaden() {
             boxEintrag.appendChild(auswahl);
             boxEintrag.appendChild(menge);
             boxEintrag.appendChild(packenBtn);
-        }
-
-        //Löschen nur im Status Entwurf möglich
-        if (packlisteStatus == 'Entwurf') {
-            const loeschenButton = document.createElement('button');
-            loeschenButton.textContent = 'Box löschen';
-            loeschenButton.addEventListener('click', function () {
-                boxLoeschen(box.boxId);
-            });
-            boxEintrag.appendChild(loeschenButton);
         }
 
         //Fertige Box zusammenfügen und anzeigen
@@ -194,24 +202,32 @@ async function packen(boxId, materialId, mengeGepackt) {
     }
 }
 
+//Status ändern
 async function statusAendern(aktion) {
     const fehler = document.getElementById('status-fehler');
 
     //Anfrage an die Backend Route, aktion wird vom EventListener übergeben
-    const antwort = await fetch('/api/packlisten/' + packlisteId + '/' + aktion, { method: 'POST' }); 
+    const antwort = await fetch('/api/packlisten/' + packlisteId + '/' + aktion, { method: 'POST' }); //Status beim Server ändern
 
-    //Bei Erfolg
+    //Bei Erfolg im Server
     if (antwort.ok) {
         fehler.hidden = true;
+        //Wenn auf archivieren geklickt wurde
         if (aktion === 'archivieren') {
             window.location.href = '/';
         }
+        //Ansonsten wurde Status aktiviert
+        else {
+            seiteLaden();
+        }
     }
-    //Bei aktivieren
+    //Bei Fehler im Server
     else {
-        seiteLaden(); //Seite neu laden
+        const daten = await antwort.json();
+        fehler.textContent = daten.fehler;
+        fehler.hidden = false;
     }
-}
+} 
 
 document.getElementById('aktivieren').addEventListener('click', function () {
     statusAendern('aktivieren'); //Aktivieren Route aufrufen
